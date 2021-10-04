@@ -1,14 +1,18 @@
 package com.mashibing.tank;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TankFrame extends Frame {
-    int x = 200;
-    int y = 200;
+    Tank myTank = new Tank(200,200,Dir.DOWN,this);
+    Bullet b = new Bullet(300,300,Dir.DOWN,this);
+    List<Bullet> bullets = new ArrayList<>();
 
-    public TankFrame()
-    {
-        setSize(800,600);
+    static final int GAME_WIDTH = 800, GAME_HIGHT = 600;
+
+    public TankFrame() {
+        setSize(GAME_WIDTH,GAME_HIGHT);
         setResizable(false);
         setTitle("tank");
         setVisible(true);
@@ -21,25 +25,101 @@ public class TankFrame extends Frame {
         });
     }
 
+    Image offScreenImage = null;
+
+    @Override
+    public void update(Graphics g) {
+        if(offScreenImage==null){
+            offScreenImage = this.createImage(GAME_WIDTH,GAME_HIGHT);
+        }
+        Graphics gOffScreen = offScreenImage.getGraphics();
+        Color c = gOffScreen.getColor();
+        gOffScreen.setColor(Color.BLACK);
+        gOffScreen.fillRect(0,0,GAME_WIDTH,GAME_HIGHT);
+        gOffScreen.setColor(c);
+        paint(gOffScreen);
+        g.drawImage(offScreenImage,0,0,null);
+    }
+
     @Override
     public void paint(Graphics g) {
-        //g.fillRect(200,200,50,50);
-        System.out.println("hello");
-        g.fillRect(x,y,50,50);
-        x += 20;
-        //y += 20;
+        Color c = g.getColor();
+        g.setColor(Color.WHITE);
+        g.drawString("子弹的数量：" + bullets.size(),10,60);
+        g.setColor(c);
+
+        myTank.paint(g);
+
+        for(int i=0;i<bullets.size();i++){
+            bullets.get(i).paint(g);
+        }
     }
 
     class MyKeyListener extends KeyAdapter
     {
+        boolean bL = false;
+        boolean bU = false;
+        boolean bR = false;
+        boolean bD = false;
+
         @Override
         public void keyPressed(KeyEvent e) {
-            System.out.println("key pressed");
+            int key = e.getKeyCode();
+            switch (key)
+            {
+                case KeyEvent.VK_LEFT:
+                    bL = true;
+                    break;
+                case KeyEvent.VK_UP:
+                    bU = true;
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    bR = true;
+                    break;
+                case KeyEvent.VK_DOWN:
+                    bD = true;
+                    break;
+                default:
+                    break;
+            }
+            setMainTankDir();
         }
 
         @Override
         public void keyReleased(KeyEvent e) {
-            System.out.println("key released");
+            int key = e.getKeyCode();
+            switch (key)
+            {
+                case KeyEvent.VK_LEFT:
+                    bL = false;
+                    break;
+                case KeyEvent.VK_UP:
+                    bU = false;
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    bR = false;
+                    break;
+                case KeyEvent.VK_DOWN:
+                    bD = false;
+                    break;
+                case KeyEvent.VK_CONTROL:
+                    myTank.fire();
+                    break;
+                default:
+                    break;
+            }
+            setMainTankDir();
+        }
+
+        private void setMainTankDir() {
+            if(!bL && !bU && !bR && !bD) myTank.setMoving(false);
+            else {
+                myTank.setMoving(true);
+                if(bL)myTank.setDir(Dir.LEFT);
+                if(bU)myTank.setDir(Dir.UP);
+                if(bR)myTank.setDir(Dir.RIGHT);
+                if(bD)myTank.setDir(Dir.DOWN);
+            }
         }
     }
 }
